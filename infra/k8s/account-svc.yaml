@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: account-svc
-          image: ynraws/securebank-account-svc:latest
+          image: itsmeynr/securebank-account-svc:latest
           ports:
             - containerPort: 8081
 ---

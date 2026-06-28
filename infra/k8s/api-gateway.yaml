@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: ynraws/securebank-api-gateway:latest
+          image: itsmeynr/securebank-api-gateway:latest
           ports:
             - containerPort: 8080
           env:

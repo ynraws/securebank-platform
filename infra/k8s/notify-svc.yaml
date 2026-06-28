@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: notify-svc
-          image: ynraws/securebank-notify-svc:latest
+          image: itsmeynr/securebank-notify-svc:latest
           ports:
             - containerPort: 8084
 ---
