@@ -146,12 +146,15 @@ curl http://localhost:8085/health
 
 - [x] Microservices implementation (6 services)
 - [x] Docker Compose local setup
-- [ ] GitHub Actions CI/CD pipeline
-- [ ] Kind cluster local deployment
-- [ ] ArgoCD GitOps setup
-- [ ] Prometheus + Grafana monitoring
-- [ ] AWS EKS via Terraform
+- [x] GitHub Actions CI/CD pipeline
+- [x] Kind cluster local deployment
+- [x] ArgoCD GitOps setup
+- [x] Prometheus + Grafana monitoring
+- [x] Terraform EKS Infrastructure as Code
+- [ ] AWS EKS live deployment (requires AWS credentials)
 - [ ] Vault secrets integration
+- [ ] Istio service mesh
+- [ ] FinOps dashboard (Kubecost)
 
 ---
 
