@@ -1,0 +1,123 @@
+global:
+  imageRegistry: itsmeynr
+  imagePullSecret: dockerhub-secret
+  environment: production
+  namespace: securebank
+
+services:
+  apiGateway:
+    name: api-gateway
+    image: securebank-api-gateway
+    tag: latest
+    replicas: 2
+    port: 8080
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+
+  accountSvc:
+    name: account-svc
+    image: securebank-account-svc
+    tag: latest
+    replicas: 2
+    port: 8081
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+    env:
+      DATABASE_URL: "postgres://postgres:postgres123@postgres:5432/securebank?sslmode=disable"
+
+  paymentSvc:
+    name: payment-svc
+    image: securebank-payment-svc
+    tag: latest
+    replicas: 2
+    port: 8082
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+    env:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/securebank"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "postgres123"
+
+  fraudSvc:
+    name: fraud-svc
+    image: securebank-fraud-svc
+    tag: latest
+    replicas: 2
+    port: 8083
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+
+  notifySvc:
+    name: notify-svc
+    image: securebank-notify-svc
+    tag: latest
+    replicas: 1
+    port: 8084
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+
+  costReporter:
+    name: cost-reporter
+    image: securebank-cost-reporter
+    tag: latest
+    replicas: 1
+    port: 8085
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+
+postgres:
+  enabled: true
+  image: postgres
+  tag: "15"
+  port: 5432
+  database: securebank
+  username: postgres
+  password: postgres123
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: securebank.local
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
