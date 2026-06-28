@@ -1,7 +1,23 @@
+# Java
 **/target/
-**/__pycache__/
-**/node_modules/
 **/*.class
+**/*.jar
+
+# Node
+**/node_modules/
+**/package-lock.json
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Go
+**/vendor/
+
+# Environment
 **/.env
-**/go.sum
 *.log
+
+# Docker
+**/.docker/
