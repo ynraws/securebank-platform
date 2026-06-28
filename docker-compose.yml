@@ -1,0 +1,141 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: securebank-postgres
+    environment:
+      POSTGRES_USER: securebank
+      POSTGRES_PASSWORD: securebank123
+      POSTGRES_DB: accountdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U securebank"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-payment:
+    image: postgres:15-alpine
+    container_name: securebank-postgres-payment
+    environment:
+      POSTGRES_USER: securebank
+      POSTGRES_PASSWORD: securebank123
+      POSTGRES_DB: paymentdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_payment_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U securebank"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: securebank-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: securebank-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  account-svc:
+    build: ./services/account-svc
+    container_name: account-svc
+    ports:
+      - "8081:8081"
+    environment:
+      DATABASE_URL: postgres://securebank:securebank123@postgres:5432/accountdb?sslmode=disable
+      JWT_SECRET: local-dev-secret-change-in-prod
+      PORT: "8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  payment-svc:
+    build: ./services/payment-svc
+    container_name: payment-svc
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-payment:5432/paymentdb
+      SPRING_DATASOURCE_USERNAME: securebank
+      SPRING_DATASOURCE_PASSWORD: securebank123
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  fraud-svc:
+    build: ./services/fraud-svc
+    container_name: fraud-svc
+    ports:
+      - "8083:8083"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      DATABASE_URL: postgresql://securebank:securebank123@postgres:5432/accountdb
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  notify-svc:
+    build: ./services/notify-svc
+    container_name: notify-svc
+    ports:
+      - "8084:8084"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      PORT: "8084"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  cost-reporter:
+    build: ./services/cost-reporter
+    container_name: cost-reporter
+    ports:
+      - "8085:8085"
+    environment:
+      ENVIRONMENT: local
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+    depends_on:
+      - account-svc
+      - payment-svc
+      - fraud-svc
+      - notify-svc
+      - cost-reporter
+
+volumes:
+  postgres_data:
+  postgres_payment_data:
