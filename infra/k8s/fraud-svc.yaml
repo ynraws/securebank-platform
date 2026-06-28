@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-svc
+  namespace: securebank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fraud-svc
+  template:
+    metadata:
+      labels:
+        app: fraud-svc
+    spec:
+      containers:
+        - name: fraud-svc
+          image: ynraws/securebank-fraud-svc:latest
+          ports:
+            - containerPort: 8083
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-svc
+  namespace: securebank
+spec:
+  selector:
+    app: fraud-svc
+  ports:
+    - port: 8083
+      targetPort: 8083
+  type: ClusterIP
