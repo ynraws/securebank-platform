@@ -287,3 +287,22 @@ jobs:
           echo "  → ${{ secrets.DOCKER_USERNAME }}/securebank-notify-svc:${{ github.sha }}"
           echo "  → ${{ secrets.DOCKER_USERNAME }}/securebank-cost-reporter:${{ github.sha }}"
           echo "========================================="
+
+# ——————————————————————————————————————
+# JOB 9: SonarQube Code Quality Scan
+# ——————————————————————————————————————
+  sonarqube-scan:
+    name: 🔍 SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: [build-api-gateway]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
