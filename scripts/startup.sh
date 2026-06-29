@@ -28,16 +28,16 @@ echo "🔷 Step 5: Waiting for Vault..."
 kubectl wait --for=condition=ready pod/vault-0 -n vault --timeout=120s && log "Vault ready"
 
 echo "🔷 Step 6: Waiting for SecureBank services..."
-kubectl wait --for=condition=available deployments --all -n securebank --timeout=120s && log "Services ready"
+kubectl wait --for=condition=available deployments --all -n securebank --timeout=180s && log "Services ready" || warn "Some services still starting - ArgoCD will sync them"
 
 echo "🔷 Step 7: Waiting for Monitoring..."
-kubectl wait --for=condition=available deployment/prometheus-grafana -n monitoring --timeout=60s && log "Monitoring ready"
+kubectl wait --for=condition=available deployment/prometheus-stack-grafana -n monitoring --timeout=60s && log "Monitoring ready"
 
 echo "🔷 Step 8: Starting port-forwards..."
 pkill -f "port-forward" 2>/dev/null
 sleep 2
 kubectl port-forward svc/argocd-server -n argocd 8080:443 &>/dev/null &
-kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80 &>/dev/null &
+kubectl port-forward svc/prometheus-stack-grafana -n monitoring 3000:80 &>/dev/null &
 kubectl port-forward svc/vault -n vault 8200:8200 &>/dev/null &
 kubectl port-forward svc/sonarqube-sonarqube -n sonarqube 9000:9000 &>/dev/null &
 log "Port forwards started"
